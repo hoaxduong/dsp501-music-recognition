@@ -110,7 +110,7 @@ def main():
             "B": "Kevin MacLeod (incompetech.com) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)",
             "C": "United States Marine Band",
             "D": "Czech National Symphony Orchestra · Musopen",
-            "E": "Musopen",
+            "E": "Skidmore College Orchestra · Musopen",
         }
         for key, (title, _, remote) in RECORDINGS.items():
             source = f"https://commons.wikimedia.org/wiki/File:{remote.split('/')[-1]}"
