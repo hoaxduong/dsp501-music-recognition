@@ -6,6 +6,7 @@ import numpy as np
 import soundfile as sf
 import streamlit as st
 from audio_input import MAX_BYTES, MAX_SECONDS, decode_audio
+from dsp_steps import show_dsp_steps
 from fingerprint import (
     RECORDINGS,
     REFERENCE_SECONDS,
@@ -34,7 +35,7 @@ def wav_bytes(wave):
 
 
 def show_result(wave, index, keys):
-    result = recognize(wave, index, keys)
+    result = recognize(wave, index, keys, explain=True)
     match = result["match"]
     if match:
         st.success(f"{match['title']} · khớp khoảng giây {max(0, match['seconds']):g}")
@@ -43,6 +44,7 @@ def show_result(wave, index, keys):
     st.caption(f"{len(wave) / SR:.2f} giây · {result['tokens']} cặp đỉnh trong đoạn nghe")
     st.table([{"Bản thu": item["title"], "Điểm": item["votes"]} for item in result["candidates"]])
     st.caption("Báo khớp từ 8 điểm và khi bài dẫn đầu có ít nhất gấp đôi điểm bài kế tiếp.")
+    show_dsp_steps(wave, result)
 
 
 def main():

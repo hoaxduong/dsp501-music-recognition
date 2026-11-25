@@ -10,6 +10,13 @@ uv run --python 3.11 --with-requirements prototypes/requirements.txt streamlit r
 
 Streamlit Community Cloud dùng `prototypes/streamlit_app.py` làm entrypoint và Python 3.11.
 
+## Xem các bước xử lý
+
+Sau khi bấm **Nhận diện**, mục **Các bước xử lý tín hiệu** cho thấy dạng sóng
+rời rạc, tác dụng của cửa sổ Hann, phổ DFT của một khung và ảnh phổ STFT.
+Hai tab cuối trình bày cặp đỉnh dùng làm dấu vân tay và số phiếu theo độ lệch
+thời gian. Thử đổi mức nhiễu của cùng một đoạn mẫu để quan sát các bước này.
+
 ## Notebook thí nghiệm
 
 [Nhận diện bản thu âm nhạc từ đoạn âm thanh ngắn](notebooks/02-tham-tu-am-nhac.ipynb)

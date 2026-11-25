@@ -12,6 +12,7 @@ from scipy.signal import resample_poly, stft
 
 SR = 12_000
 FRAME, HOP = 1024, 240
+WINDOW = "hann"
 REFERENCE_SECONDS = 45
 SEED = 501
 CACHE = Path(__file__).resolve().parents[1] / "data/raw/audio-fingerprints"
@@ -53,7 +54,15 @@ FILE_HASHES = {
 
 
 def spectrum(wave):
-    return stft(wave, fs=SR, nperseg=FRAME, noverlap=FRAME - HOP, boundary=None, padded=False)
+    return stft(
+        wave,
+        fs=SR,
+        window=WINDOW,
+        nperseg=FRAME,
+        noverlap=FRAME - HOP,
+        boundary=None,
+        padded=False,
+    )
 
 
 def spectral_peaks(frequencies, magnitude):
@@ -66,6 +75,11 @@ def spectral_peaks(frequencies, magnitude):
 
 def fingerprints(magnitude):
     peaks = spectral_peaks(fft_frequencies, magnitude)
+    for token, anchor, _ in fingerprint_pairs(peaks):
+        yield token, anchor[0]
+
+
+def fingerprint_pairs(peaks):
     for index, (anchor_time, anchor_freq) in enumerate(peaks):
         paired = 0
         for target in range(index + 1, len(peaks)):
@@ -75,7 +89,7 @@ def fingerprints(magnitude):
                 break
             if delay >= 5:
                 token = (anchor_freq // 2, target_freq // 2, round(delay / 2))
-                yield token, anchor_time
+                yield token, (anchor_time, anchor_freq), (target_time, target_freq)
                 paired += 1
                 if paired == 8:
                     break
@@ -121,12 +135,15 @@ def build_index(references):
     return index
 
 
-def recognize(wave, index, keys):
+def recognize(wave, index, keys, *, explain=False):
     if not np.isfinite(wave).all() or len(wave) < SR:
         raise ValueError("Cần ít nhất 1 giây âm thanh hợp lệ.")
     offsets = {key: Counter() for key in keys}
-    query = list(fingerprints(np.abs(spectrum(wave)[2])))
-    for token, query_time in query:
+    frequencies, times, coefficients = spectrum(wave)
+    magnitude = np.abs(coefficients)
+    peaks = spectral_peaks(frequencies, magnitude)
+    pairs = list(fingerprint_pairs(peaks))
+    for token, (query_time, _), _ in pairs:
         for key, ref_time in index.get(token, ()):
             if key in offsets:
                 offsets[key][ref_time - query_time] += 1
@@ -153,4 +170,14 @@ def recognize(wave, index, keys):
     best, runner_up = candidates[:2]
     # Ngưỡng thử nghiệm cho kho nhỏ, dùng chung cho giao diện và phép đo.
     accepted = best["votes"] >= max(8, runner_up["votes"] * 2)
-    return {"match": best if accepted else None, "candidates": candidates, "tokens": len(query)}
+    result = {"match": best if accepted else None, "candidates": candidates, "tokens": len(pairs)}
+    if explain:
+        result["trace"] = {
+            "frequencies": frequencies,
+            "times": times,
+            "magnitude": magnitude,
+            "peaks": peaks,
+            "pairs": pairs[:6],
+            "offsets": offsets[best["key"]],
+        }
+    return result
