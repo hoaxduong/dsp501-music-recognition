@@ -2,11 +2,25 @@
 
 Web app thử nhận diện bài hát bằng dấu vân tay phổ trên 5 bản thu Wikimedia Commons.
 
+[Mở Thám tử âm nhạc trên Streamlit](https://music-recognition.streamlit.app/).
+
 ```bash
 uv run --python 3.11 --with-requirements prototypes/requirements.txt streamlit run prototypes/streamlit_app.py
 ```
 
 Streamlit Community Cloud dùng `prototypes/streamlit_app.py` làm entrypoint và Python 3.11.
+
+## Notebook thí nghiệm
+
+[Nhận diện bản thu âm nhạc từ đoạn âm thanh ngắn](notebooks/02-tham-tu-am-nhac.ipynb)
+so sánh cosine, 3-NN, DTW và dấu vân tay phổ ở ba mức nhiễu. Notebook có sẵn
+bảng kết quả và biểu đồ. Chạy JupyterLab từ thư mục repo để thử lại với năm
+bản thu đi kèm.
+
+```bash
+uv run --python 3.11 --with jupyterlab --with matplotlib --with pandas \
+  --with-requirements prototypes/requirements.txt jupyter lab notebooks/02-tham-tu-am-nhac.ipynb
+```
 
 ## Nguồn âm thanh
 
