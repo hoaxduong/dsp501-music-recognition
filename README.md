@@ -1,8 +1,8 @@
-# Thám tử âm nhạc
+# Nhận diện bản thu âm nhạc
 
 Web app thử nhận diện bài hát bằng dấu vân tay phổ trên 5 bản thu Wikimedia Commons.
 
-[Mở Thám tử âm nhạc trên Streamlit](https://music-recognition.streamlit.app/).
+[Mở Nhận diện bản thu âm nhạc trên Streamlit](https://music-recognition.streamlit.app/).
 
 ```bash
 uv run --python 3.11 --with-requirements prototypes/requirements.txt streamlit run prototypes/streamlit_app.py

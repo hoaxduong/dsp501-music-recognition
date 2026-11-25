@@ -17,6 +17,8 @@ from fingerprint import (
     with_noise,
 )
 
+APP_TITLE = "Nhận diện bản thu âm nhạc"
+
 
 @st.cache_resource(show_spinner="Đang chuẩn bị kho 5 bản thu…")
 def catalog():
@@ -44,8 +46,8 @@ def show_result(wave, index, keys):
 
 
 def main():
-    st.set_page_config(page_title="Thám tử âm nhạc", page_icon="🎵")
-    st.title("Thám tử âm nhạc")
+    st.set_page_config(page_title=APP_TITLE)
+    st.title(APP_TITLE)
     st.write("Thử nhận diện bằng dấu vân tay từ 45 giây đầu của 5 bản thu trong notebook.")
     try:
         references, index = catalog()
