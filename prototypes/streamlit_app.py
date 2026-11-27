@@ -49,6 +49,25 @@ def loudio_index():
     return CompactIndex(INDEX_FILE)
 
 
+@st.fragment
+def show_catalog(titles):
+    st.subheader("Loudio recordings")
+    st.caption(f"To test a recording, choose a clip from its first {REFERENCE_SECONDS} seconds.")
+    search = st.text_input("Search by song or artist", placeholder="Enter a song or artist")
+    terms = search.casefold().split()
+    recordings = [
+        {"Song and artist": title}
+        for title in titles
+        if all(term in title.casefold() for term in terms)
+    ]
+
+    st.caption(f"{len(recordings)} of {len(titles)} recordings")
+    if recordings:
+        st.dataframe(recordings, hide_index=True, width="stretch", height=320)
+    else:
+        st.info("No recordings match your search.")
+
+
 def main():
     st.set_page_config(page_title=APP_TITLE)
     st.title(APP_TITLE)
@@ -65,11 +84,14 @@ def main():
     st.caption("Audio stays in your browser. Only fingerprints are sent for matching.")
 
     response = browser_audio(key="loudio_audio", on_query_change=lambda: None)
-    if not response.query:
-        return
+    if response.query:
+        show_match(index, response.query)
+    show_catalog(tuple(index.titles.values()))
 
+
+def show_match(index, query):
     try:
-        payload = json.dumps(response.query, separators=(",", ":")).encode()
+        payload = json.dumps(query, separators=(",", ":")).encode()
         seconds, result = index.recognize(payload)
     except ValueError as error:
         st.error(str(error))
