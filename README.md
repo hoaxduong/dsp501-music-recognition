@@ -29,6 +29,18 @@ uv run --python 3.11 --with jupyterlab --with matplotlib --with pandas \
   --with-requirements prototypes/requirements.txt jupyter lab notebooks/02-tham-tu-am-nhac.ipynb
 ```
 
+## Mô hình quyết định khớp
+
+[Notebook huấn luyện và đánh giá](notebooks/04-loudio-match-training.ipynb)
+trình bày cách chia tập theo bản thu, trích đặc trưng, huấn luyện hồi quy
+logistic và so sánh trên tập kiểm tra riêng. Để chạy lại, đặt bộ dữ liệu
+Loudio cục bộ vào `data/processed/loudio-hits/`.
+
+Trong app, dùng **Cách quyết định khớp** để chọn quy tắc gốc hoặc mô hình
+hồi quy logistic. Hai chế độ tra cứu cùng kho năm bản thu Wikimedia Commons.
+Mô hình được đánh giá trên các đoạn Loudio 5 giây. Repo chứa tham số hồi quy
+và kết quả tổng hợp.
+
 ## Nguồn âm thanh
 
 Các tệp Wikimedia Commons dưới đây được giữ nguyên để ứng dụng khởi động

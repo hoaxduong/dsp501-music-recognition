@@ -1,6 +1,8 @@
 """Streamlit interface for the DSP501 fingerprint experiment."""
 
 import io
+import json
+from pathlib import Path
 
 import numpy as np
 import soundfile as sf
@@ -17,8 +19,11 @@ from fingerprint import (
     recognize,
     with_noise,
 )
+from match_model import accept_match
 
 APP_TITLE = "Nhận diện bản thu âm nhạc"
+BASELINE = "Quy tắc gốc"
+LEARNED = "Hồi quy logistic (thử nghiệm)"
 
 
 @st.cache_resource(show_spinner="Đang chuẩn bị kho 5 bản thu…")
@@ -34,16 +39,22 @@ def wav_bytes(wave):
     return output.getvalue()
 
 
-def show_result(wave, index, keys):
+def show_result(wave, index, keys, decision):
     result = recognize(wave, index, keys, explain=True)
     match = result["match"]
+    if decision == LEARNED:
+        model = json.loads(Path(__file__).with_name("match_model.json").read_text(encoding="utf-8"))
+        accepted, score = accept_match(result, model)
+        match = result["candidates"][0] if accepted else None
+        st.caption(f"Điểm mô hình {score:.3f} · ngưỡng báo khớp {model['threshold']:.2f}")
+    else:
+        st.caption("Báo khớp từ 8 điểm và khi bài dẫn đầu có ít nhất gấp đôi điểm bài kế tiếp.")
     if match:
         st.success(f"{match['title']} · khớp khoảng giây {max(0, match['seconds']):g}")
     else:
         st.info("Không đủ dấu hiệu khớp.")
     st.caption(f"{len(wave) / SR:.2f} giây · {result['tokens']} cặp đỉnh trong đoạn nghe")
     st.table([{"Bản thu": item["title"], "Điểm": item["votes"]} for item in result["candidates"]])
-    st.caption("Báo khớp từ 8 điểm và khi bài dẫn đầu có ít nhất gấp đôi điểm bài kế tiếp.")
     show_dsp_steps(wave, result)
 
 
@@ -60,6 +71,12 @@ def main():
         return
 
     mode = st.radio("Nguồn âm thanh", ("Đoạn mẫu", "Tải tệp", "Micro"), horizontal=True)
+    decision = st.selectbox("Cách quyết định khớp", (BASELINE, LEARNED))
+    if decision == LEARNED:
+        st.caption(
+            "Mô hình được huấn luyện trên đoạn Loudio dài 5 giây. "
+            "Bản demo tra cứu 5 bản thu Wikimedia Commons."
+        )
     keys = tuple(references)
 
     if mode == "Đoạn mẫu":
@@ -83,7 +100,9 @@ def main():
             wave = with_noise(wave, levels[noise], np.random.default_rng(SEED))
         st.audio(wav_bytes(wave))
         if st.button("Nhận diện đoạn mẫu", type="primary"):
-            show_result(wave, index, tuple(key for key in keys if not exclude or key != song))
+            show_result(
+                wave, index, tuple(key for key in keys if not exclude or key != song), decision
+            )
     else:
         if mode == "Tải tệp":
             audio = st.file_uploader(
@@ -103,7 +122,7 @@ def main():
                 if audio.size > MAX_BYTES:
                     raise ValueError("Đoạn âm thanh vượt giới hạn 20 MB.")
                 wave = decode_audio(audio.getvalue())
-                show_result(wave, index, keys)
+                show_result(wave, index, keys, decision)
             except ValueError as error:
                 st.error(str(error))
 
