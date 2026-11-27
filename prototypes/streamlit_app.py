@@ -44,14 +44,14 @@ browser_audio = st.components.v2.component(
 )
 
 
-@st.cache_resource(show_spinner="Loading the Loudio fingerprint index…")
+@st.cache_resource(show_spinner="Loading the recording index…")
 def loudio_index():
     return CompactIndex(INDEX_FILE)
 
 
 @st.fragment
 def show_catalog(titles):
-    st.subheader("Loudio recordings")
+    st.subheader("Indexed recordings")
     st.caption(f"To test a recording, choose a clip from its first {REFERENCE_SECONDS} seconds.")
     search = st.text_input("Search by song or artist", placeholder="Enter a song or artist")
     terms = search.casefold().split()
@@ -74,12 +74,10 @@ def main():
     try:
         index = loudio_index()
     except (OSError, ValueError):
-        st.error("The Loudio fingerprint index is unavailable.")
+        st.error("The recording index is unavailable.")
         return
 
-    st.caption(
-        f"Loudio catalog · {len(index.titles)} recordings · first {REFERENCE_SECONDS} s each"
-    )
+    st.caption(f"{len(index.titles)} recordings indexed · first {REFERENCE_SECONDS} s each")
     st.write("Choose an audio clip or record five seconds to identify the recording.")
     st.caption("Audio stays in your browser. Only fingerprints are sent for matching.")
 
@@ -103,7 +101,7 @@ def show_match(index, query):
         st.success(match["title"])
         st.caption(f"Estimated start in reference {start:g} s")
     else:
-        st.info("No reliable match in the Loudio catalog.")
+        st.info("No reliable match in the catalog.")
     st.caption(f"Analyzed {seconds:.2f} s · {result['tokens']:,} spectral peak pairs")
 
 
