@@ -1,11 +1,12 @@
 """Identify audio against the Loudio index using fingerprints from the browser."""
 
 import json
+from collections import Counter
 from pathlib import Path
 
 import streamlit as st
 from fingerprint import REFERENCE_SECONDS
-from loudio_fingerprints import INDEX_FILE, CompactIndex
+from loudio_fingerprints import INDEX_FILE, CompactIndex, load_query
 
 APP_TITLE = "Music Recording Identification"
 
@@ -42,7 +43,12 @@ def show_catalog(titles):
 
 
 def main():
-    st.set_page_config(page_title=APP_TITLE)
+    st.set_page_config(page_title=APP_TITLE, layout="wide")
+    with st.container(horizontal_alignment="center"), st.container(width=1080):
+        show_app()
+
+
+def show_app():
     st.title(APP_TITLE)
     try:
         index = loudio_index()
@@ -62,7 +68,7 @@ def main():
 def show_match(index, query):
     try:
         payload = json.dumps(query, separators=(",", ":")).encode()
-        seconds, result = index.recognize(payload, explain=True)
+        seconds, result = index.recognize(payload)
     except ValueError as error:
         st.error(str(error))
         return
@@ -80,7 +86,15 @@ def show_match(index, query):
     with votes_column, st.expander("See time-offset votes"):
         from dsp_steps import show_offsets
 
-        show_offsets(result["trace"], result["candidates"][0])
+        leading = result["candidates"][0]
+        _, pairs = load_query(payload)
+        offsets = Counter(
+            reference_frame - query_frame
+            for digest, query_frame in pairs
+            for recording, reference_frame in index.get(digest, ())
+            if recording == leading["key"]
+        )
+        show_offsets({"offsets": offsets}, leading)
 
 
 if __name__ == "__main__":
