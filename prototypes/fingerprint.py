@@ -135,15 +135,25 @@ def build_index(references):
     return index
 
 
-def recognize(wave, index, keys, *, explain=False):
+def recognize(wave, index, keys, *, explain=False, titles=None):
     if not np.isfinite(wave).all() or len(wave) < SR:
         raise ValueError("Provide at least one second of valid audio.")
-    offsets = {key: Counter() for key in keys}
     frequencies, times, coefficients = spectrum(wave)
     magnitude = np.abs(coefficients)
     peaks = spectral_peaks(frequencies, magnitude)
     pairs = list(fingerprint_pairs(peaks))
-    for token, (query_time, _), _ in pairs:
+    query = [(token, anchor[0]) for token, anchor, _ in pairs]
+    result = match_tokens(query, index, keys, explain=explain, titles=titles)
+    if explain:
+        result["trace"].update(
+            frequencies=frequencies, times=times, magnitude=magnitude, peaks=peaks, pairs=pairs[:6]
+        )
+    return result
+
+
+def match_tokens(query, index, keys, *, explain=False, titles=None):
+    offsets = {key: Counter() for key in keys}
+    for token, query_time in query:
         for key, ref_time in index.get(token, ()):
             if key in offsets:
                 offsets[key][ref_time - query_time] += 1
@@ -161,7 +171,7 @@ def recognize(wave, index, keys, *, explain=False):
         candidates.append(
             {
                 "key": key,
-                "title": RECORDINGS[key][0],
+                "title": RECORDINGS[key][0] if titles is None else titles[key],
                 "votes": votes,
                 "seconds": round(offset * HOP / SR, 2) if offset is not None else None,
             }
@@ -170,14 +180,7 @@ def recognize(wave, index, keys, *, explain=False):
     best, runner_up = candidates[:2]
     # Ngưỡng thử nghiệm cho kho nhỏ, dùng chung cho giao diện và phép đo.
     accepted = best["votes"] >= max(8, runner_up["votes"] * 2)
-    result = {"match": best if accepted else None, "candidates": candidates, "tokens": len(pairs)}
+    result = {"match": best if accepted else None, "candidates": candidates, "tokens": len(query)}
     if explain:
-        result["trace"] = {
-            "frequencies": frequencies,
-            "times": times,
-            "magnitude": magnitude,
-            "peaks": peaks,
-            "pairs": pairs[:6],
-            "offsets": offsets[best["key"]],
-        }
+        result["trace"] = {"offsets": offsets[best["key"]]}
     return result

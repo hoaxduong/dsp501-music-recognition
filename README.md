@@ -1,6 +1,6 @@
 # Music Recording Identification
 
-Web app thử nhận diện bài hát bằng dấu vân tay phổ trên 5 bản thu Wikimedia Commons.
+Identify snippets by matching spectral peak pairs and voting on time offsets.
 
 [Open the Streamlit demo](https://music-recognition.streamlit.app/).
 
@@ -33,12 +33,32 @@ uv run --python 3.11 --with jupyterlab --with matplotlib --with pandas \
 
 The app identifies recordings using STFT, spectral peak pairs, and time-offset
 voting. A match needs at least eight votes and at least twice the runner-up
-score. The public app uses five recordings from Wikimedia Commons.
+score. The app offers a Loudio fingerprint catalog and a five-recording Wikimedia audio demo.
 
 The Loudio dataset is kept local and was used for the reported experiments.
 The [training and evaluation notebook](notebooks/04-loudio-match-training.ipynb)
 records the separate decision-model experiment. Re-running it requires the
 local Loudio data under `data/processed/loudio-hits/`.
+
+## Loudio lookup without uploading audio
+
+1. In the public demo, select **Loudio fingerprints** and click **Try an example fingerprint**.
+2. For your own query, run the app locally with the processed Loudio dataset and export a fingerprint:
+
+   ```bash
+   DSP501_LOCAL_LOUDIO=1 uv run --python 3.11 --with-requirements prototypes/requirements.txt \
+     streamlit run prototypes/streamlit_app.py --server.address 127.0.0.1 --server.port 8502
+   ```
+
+3. Use **Sample clip**, **Upload**, or **Microphone** on the local app. For an uploaded or
+   recorded clip, click **Identify recording** to reveal **Export query fingerprint**.
+   Upload the exported JSON in **Loudio fingerprints** on the public demo.
+
+The Loudio catalog indexes the first 45 seconds of each of 100 recordings.
+The repository stores peak-pair digests, frame positions and display names.
+The Loudio audio files and dataset manifests stay on the local machine.
+The JSON query is also derived data. The cloud workflow can display votes
+by time offset because it compares those digests and frame positions.
 
 ## Nguồn âm thanh
 
