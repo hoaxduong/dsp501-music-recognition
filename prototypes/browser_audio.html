@@ -19,14 +19,22 @@
               <span></span><span></span><span></span><span></span><span></span>
               <span></span><span></span><span></span><span></span>
             </div>
-            <span class="record-time">0:05</span>
+            <span class="record-time">0:10</span>
           </div>
+          <label class="record-duration">
+            Duration
+            <select>
+              <option value="5">5 seconds</option>
+              <option value="10" selected>10 seconds</option>
+              <option value="15">15 seconds</option>
+            </select>
+          </label>
           <button class="record-button" type="button" aria-describedby="record-details">
             <span class="record-dot" aria-hidden="true"></span>
             <span class="record-action">Start recording</span>
           </button>
         </div>
-        <p class="card-details" id="record-details">Play music near your microphone for 5 seconds</p>
+        <p class="card-details" id="record-details">Play music near your microphone</p>
       </section>
       <p class="audio-status" role="status" aria-live="polite"></p>
     </div>

@@ -4,7 +4,6 @@ const FRAME = 1024;
 const HOP = 240;
 const BINS = FRAME / 2 + 1;
 const MAX_SECONDS = 15;
-const RECORD_SECONDS = 5;
 const PLOT_LAST_BIN = Math.floor(3500 * FRAME / SR);
 const FORMAT = "dsp501-peak-pairs-v2";
 const HANN = Float64Array.from({ length: FRAME }, (_, i) =>
@@ -263,6 +262,7 @@ export default function ({ parentElement: root, setTriggerValue }) {
   const card = root.querySelector(".record-card");
   const action = root.querySelector(".record-action");
   const countdown = root.querySelector(".record-time");
+  const duration = root.querySelector(".record-duration select");
   const status = root.querySelector("[role=status]");
   let recorder;
   let stream;
@@ -270,10 +270,18 @@ export default function ({ parentElement: root, setTriggerValue }) {
   let tick;
   let disposed = false;
 
+  function showTime(seconds) {
+    countdown.textContent = `0:${String(seconds).padStart(2, "0")}`;
+  }
+
+  duration.onchange = () => showTime(Number(duration.value));
+  duration.onchange();
+
   function busy(value) {
     upload.disabled = value;
     drop.disabled = value;
     record.disabled = value;
+    duration.disabled = value;
     if (value) drop.removeAttribute("data-dragover");
   }
 
@@ -283,7 +291,7 @@ export default function ({ parentElement: root, setTriggerValue }) {
     stream?.getTracks().forEach(track => track.stop());
     stream = undefined;
     card.removeAttribute("data-recording");
-    countdown.textContent = "0:05";
+    showTime(Number(duration.value));
     action.textContent = "Start recording";
   }
 
@@ -338,6 +346,7 @@ export default function ({ parentElement: root, setTriggerValue }) {
   };
 
   record.onclick = async () => {
+    const seconds = Number(duration.value);
     busy(true);
     status.textContent = "Waiting for microphone access…";
     try {
@@ -367,17 +376,17 @@ export default function ({ parentElement: root, setTriggerValue }) {
         if (!disposed) await analyze(new Blob(chunks, { type: recorder.mimeType }), "recording");
       };
       recorder.start();
-      status.textContent = "Recording for five seconds…";
+      status.textContent = `Recording for ${seconds} seconds…`;
       card.setAttribute("data-recording", "");
       action.textContent = "Recording…";
-      const end = performance.now() + RECORD_SECONDS * 1000;
+      const durationMs = seconds * 1000;
+      const end = performance.now() + durationMs;
       tick = setInterval(() => {
-        const seconds = Math.max(0, Math.ceil((end - performance.now()) / 1000));
-        countdown.textContent = `0:0${seconds}`;
+        showTime(Math.max(0, Math.ceil((end - performance.now()) / 1000)));
       }, 100);
       timer = setTimeout(() => {
         if (recorder.state === "recording") recorder.stop();
-      }, RECORD_SECONDS * 1000);
+      }, durationMs);
     } catch (error) {
       stopTracks();
       status.textContent = error.name === "NotAllowedError"

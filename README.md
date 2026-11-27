@@ -14,8 +14,8 @@ Streamlit Community Cloud uses `prototypes/streamlit_app.py` as the entry point.
 
 Choose **Upload audio** or **Record audio**. Matching starts automatically after
 the clip is ready. The browser analyzes up to 15 seconds of an uploaded clip
-or records five seconds from the microphone. Audio stays in the browser. Only
-the peak-pair fingerprints go to the Streamlit matcher.
+or records 5, 10, or 15 seconds from the microphone. Audio stays in the
+browser. Only the peak-pair fingerprints go to the Streamlit matcher.
 
 The default Loudio index covers the first 45 seconds of 100 recordings. It
 contains peak-pair digests, frame offsets, and display names. The Loudio
