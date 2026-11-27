@@ -11,35 +11,8 @@ APP_TITLE = "Music Recording Identification"
 
 browser_audio = st.components.v2.component(
     "dsp501_browser_audio",
-    html="""
-        <div class="choices">
-            <label>
-                <span>Upload audio</span>
-                <input type="file" accept="audio/*,.m4a,.webm,.mp4">
-            </label>
-            <button type="button">Record audio</button>
-        </div>
-        <p role="status" aria-live="polite"></p>
-    """,
-    css="""
-        .choices {
-            display: flex;
-            align-items: end;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        label { display: grid; gap: 0.35rem; }
-        input, button { font: inherit; color: inherit; max-width: 100%; }
-        button {
-            cursor: pointer;
-            border: 1px solid var(--st-border-color, #888);
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.5rem;
-            background: var(--st-secondary-background-color, transparent);
-        }
-        button:disabled { cursor: wait; }
-        p { margin: 0.45rem 0 0; }
-    """,
+    html=Path(__file__).with_name("browser_audio.html").read_text(encoding="utf-8"),
+    css=Path(__file__).with_name("browser_audio.css").read_text(encoding="utf-8"),
     js=Path(__file__).with_name("browser_fingerprint.mjs").read_text(encoding="utf-8"),
 )
 
@@ -78,7 +51,6 @@ def main():
         return
 
     st.caption(f"{len(index.titles)} recordings indexed · first {REFERENCE_SECONDS} s each")
-    st.write("Choose an audio clip or record five seconds to identify the recording.")
     st.caption("Audio stays in your browser. Only fingerprints are sent for matching.")
 
     response = browser_audio(key="loudio_audio", on_query_change=lambda: None)
@@ -90,19 +62,25 @@ def main():
 def show_match(index, query):
     try:
         payload = json.dumps(query, separators=(",", ":")).encode()
-        seconds, result = index.recognize(payload)
+        seconds, result = index.recognize(payload, explain=True)
     except ValueError as error:
         st.error(str(error))
         return
 
-    match = result["match"]
-    if match:
-        start = max(0, match["seconds"])
-        st.success(match["title"])
-        st.caption(f"Estimated start in reference {start:g} s")
-    else:
-        st.info("No reliable match in the catalog.")
-    st.caption(f"Analyzed {seconds:.2f} s · {result['tokens']:,} spectral peak pairs")
+    match_column, votes_column = st.columns([5, 7])
+    with match_column:
+        match = result["match"]
+        if match:
+            start = max(0, match["seconds"])
+            st.success(match["title"])
+            st.caption(f"Estimated start in reference {start:g} s")
+        else:
+            st.info("No reliable match in the catalog.")
+        st.caption(f"Analyzed {seconds:.2f} s · {result['tokens']:,} spectral peak pairs")
+    with votes_column, st.expander("See time-offset votes"):
+        from dsp_steps import show_offsets
+
+        show_offsets(result["trace"], result["candidates"][0])
 
 
 if __name__ == "__main__":

@@ -68,7 +68,7 @@ class CompactIndex:
             return default
         return self.postings[self.starts[idx] : self.starts[idx + 1]].tolist()
 
-    def recognize(self, payload):
+    def recognize(self, payload, *, explain=False):
         seconds, query = load_query(payload)
         digests = np.asarray([digest for digest, _ in query], dtype=np.uint64)
         positions = self.digests.searchsorted(digests)
@@ -77,4 +77,4 @@ class CompactIndex:
         positions = positions[self.digests[positions] == digests[in_range]]
         if (self.starts[positions + 1] - self.starts[positions]).sum() > MAX_VOTES_TO_CHECK:
             raise ValueError("This fingerprint has too many repeated matches. Try a shorter clip.")
-        return seconds, match_tokens(query, self, self.titles, titles=self.titles)
+        return seconds, match_tokens(query, self, self.titles, titles=self.titles, explain=explain)

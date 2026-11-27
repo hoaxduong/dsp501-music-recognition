@@ -1,0 +1,65 @@
+<div class="audio-shell">
+  <div class="audio-workspace">
+    <div class="audio-options">
+      <section class="audio-card" aria-labelledby="upload-heading">
+        <h2 id="upload-heading">Upload audio</h2>
+        <input class="audio-file" type="file" accept="audio/*,.m4a,.webm,.mp4" hidden>
+        <button class="drop-zone" type="button" aria-describedby="upload-details">
+          <span class="upload-symbol" aria-hidden="true">↑</span>
+          <span class="drop-action">Choose audio file</span>
+          <span class="drop-hint">or drop it here</span>
+        </button>
+        <p class="card-details" id="upload-details">Up to 20 MB · first 15 seconds analyzed</p>
+      </section>
+      <section class="audio-card record-card" aria-labelledby="record-heading">
+        <h2 id="record-heading">Record audio</h2>
+        <div class="record-controls">
+          <div class="record-visual" aria-hidden="true">
+            <div class="waveform">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <span class="record-time">0:05</span>
+          </div>
+          <button class="record-button" type="button" aria-describedby="record-details">
+            <span class="record-dot" aria-hidden="true"></span>
+            <span class="record-action">Start recording</span>
+          </button>
+        </div>
+        <p class="card-details" id="record-details">Play music near your microphone for 5 seconds</p>
+      </section>
+      <p class="audio-status" role="status" aria-live="polite"></p>
+    </div>
+    <section class="dsp-panel" aria-labelledby="dsp-heading">
+      <h2 id="dsp-heading">Signal processing steps</h2>
+      <p class="dsp-empty">Choose or record audio to see how its fingerprint is built.</p>
+      <details open>
+        <summary>Sampling and waveform</summary>
+        <p>Mix to mono and resample to 12 kHz.</p>
+        <canvas data-plot="wave" width="640" height="155" role="img" aria-label="Audio waveform" hidden></canvas>
+        <p class="plot-axis" data-axis="wave" hidden></p>
+      </details>
+      <details>
+        <summary>Hann window and DFT</summary>
+        <p>Taper a 1,024-sample frame, then compute its DFT using an FFT.</p>
+        <canvas data-plot="window" width="640" height="130" role="img"
+          aria-label="Selected frame before and after applying the Hann window" hidden></canvas>
+        <p class="plot-axis" data-axis="window" hidden>0–85 ms · Raw in gray, windowed in teal</p>
+        <canvas data-plot="fft" width="640" height="130" role="img" aria-label="Magnitude spectrum" hidden></canvas>
+        <p class="plot-axis" data-axis="fft" hidden>0–3.5 kHz · Relative magnitude from −60 to 0 dB</p>
+      </details>
+      <details open>
+        <summary>STFT spectrogram</summary>
+        <p>Advance by 240 samples (20 ms) and track how energy changes across frequency.</p>
+        <canvas data-plot="stft" width="640" height="200" role="img" aria-label="Audio spectrogram" hidden></canvas>
+        <p class="plot-axis" data-axis="stft" hidden></p>
+      </details>
+      <details>
+        <summary>Spectral peaks and fingerprint pairs</summary>
+        <p>Pair local spectral peaks between 120 Hz and 3.5 kHz. Each key encodes two frequencies and their time separation.</p>
+        <canvas data-plot="peaks" width="640" height="200" role="img" aria-label="Spectral peaks and example pair" hidden></canvas>
+        <p class="plot-axis" data-axis="peaks" hidden></p>
+      </details>
+    </section>
+  </div>
+</div>
