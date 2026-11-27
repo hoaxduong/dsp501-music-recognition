@@ -1,9 +1,9 @@
 """Export the cloud catalog index using only local reference audio."""
 
 import numpy as np
-from fingerprint import SR, fingerprints, spectrum
+from fingerprint import fingerprints, spectrum
 from loudio_catalog import load_loudio_references
-from loudio_fingerprints import ASSETS, EXAMPLE_FILE, FORMAT, INDEX_FILE, export_query, token_digest
+from loudio_fingerprints import ASSETS, FORMAT, INDEX_FILE, token_digest
 
 
 def main():
@@ -31,8 +31,6 @@ def main():
         starts=np.append(starts, len(postings)).astype(np.uint32),
         postings=postings,
     )
-    first_track = next(iter(references.values()))
-    EXAMPLE_FILE.write_bytes(export_query(first_track[12 * SR : 17 * SR]))
     print(f"{len(keys)} recordings, {len(unique):,} keys, {len(postings):,} postings")
 
 

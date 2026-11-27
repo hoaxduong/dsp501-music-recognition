@@ -4,46 +4,29 @@ import json
 import re
 from collections import Counter
 from functools import lru_cache
-from hashlib import blake2b
+from hashlib import sha256
 from pathlib import Path
 from struct import pack
 
 import numpy as np
 from audio_input import MAX_SECONDS
-from fingerprint import FRAME, HOP, SR, fingerprints, match_tokens, spectrum
+from fingerprint import FRAME, HOP, SR, match_tokens
 
-FORMAT = "dsp501-peak-pairs-v1"
+FORMAT = "dsp501-peak-pairs-v2"
 ASSETS = Path(__file__).with_name("fingerprint_assets")
 INDEX_FILE = ASSETS / "loudio-index.npz"
-EXAMPLE_FILE = ASSETS / "example-query.json"
 MAX_QUERY_BYTES = 500_000
 MAX_VOTES_TO_CHECK = 1_000_000
 
 
 @lru_cache(maxsize=131_072)
 def token_digest(token):
-    return int.from_bytes(
-        blake2b(pack("<HHH", *token), digest_size=8, person=b"dsp501-v1").digest()
-    )
-
-
-def export_query(wave):
-    if not np.isfinite(wave).all() or not SR <= len(wave) <= MAX_SECONDS * SR:
-        raise ValueError(f"Provide between 1 and {MAX_SECONDS} seconds of valid audio.")
-    pairs = fingerprints(np.abs(spectrum(wave)[2]))
-    return json.dumps(
-        {
-            "format": FORMAT,
-            "samples": len(wave),
-            "pairs": [[f"{token_digest(token):016x}", frame] for token, frame in pairs],
-        },
-        separators=(",", ":"),
-    ).encode()
+    return int.from_bytes(sha256(pack("<HHH", *token)).digest()[:8], "big")
 
 
 def load_query(payload):
     if len(payload) > MAX_QUERY_BYTES:
-        raise ValueError("The fingerprint file is too large.")
+        raise ValueError("The clip generated too many fingerprints. Try a shorter clip.")
     try:
         data = json.loads(payload)
         samples = data["samples"]
@@ -65,9 +48,7 @@ def load_query(payload):
         if any(count > 8 for count in Counter(query).values()):
             raise ValueError
     except (AttributeError, KeyError, TypeError, ValueError, RecursionError) as error:
-        raise ValueError(
-            "Invalid fingerprint file. Export a new JSON query from the local app."
-        ) from error
+        raise ValueError("Invalid fingerprint. Choose another clip or record again.") from error
     return samples / SR, query
 
 
@@ -95,7 +76,5 @@ class CompactIndex:
         positions = positions[in_range]
         positions = positions[self.digests[positions] == digests[in_range]]
         if (self.starts[positions + 1] - self.starts[positions]).sum() > MAX_VOTES_TO_CHECK:
-            raise ValueError(
-                "This fingerprint has too many repeated matches. Export a shorter clip."
-            )
-        return seconds, match_tokens(query, self, self.titles, titles=self.titles, explain=True)
+            raise ValueError("This fingerprint has too many repeated matches. Try a shorter clip.")
+        return seconds, match_tokens(query, self, self.titles, titles=self.titles)
