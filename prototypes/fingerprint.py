@@ -39,7 +39,7 @@ RECORDINGS = {
         "b/bb/Musopen_-_In_the_Hall_Of_The_Mountain_King.ogg",
     ),
     "E": (
-        "Giao hưởng số 5",
+        "Symphony No. 5",
         "symphony-5.ogg",
         "e/e6/Ludwig_van_Beethoven_-_symphony_no._5_in_c_minor%2C_op._67_-_i._allegro_con_brio.ogg",
     ),
@@ -137,7 +137,7 @@ def build_index(references):
 
 def recognize(wave, index, keys, *, explain=False):
     if not np.isfinite(wave).all() or len(wave) < SR:
-        raise ValueError("Cần ít nhất 1 giây âm thanh hợp lệ.")
+        raise ValueError("Provide at least one second of valid audio.")
     offsets = {key: Counter() for key in keys}
     frequencies, times, coefficients = spectrum(wave)
     magnitude = np.abs(coefficients)

@@ -1,8 +1,8 @@
-# Nhận diện bản thu âm nhạc
+# Music Recording Identification
 
 Web app thử nhận diện bài hát bằng dấu vân tay phổ trên 5 bản thu Wikimedia Commons.
 
-[Mở Nhận diện bản thu âm nhạc trên Streamlit](https://music-recognition.streamlit.app/).
+[Open the Streamlit demo](https://music-recognition.streamlit.app/).
 
 ```bash
 uv run --python 3.11 --with-requirements prototypes/requirements.txt streamlit run prototypes/streamlit_app.py
@@ -12,7 +12,7 @@ Streamlit Community Cloud dùng `prototypes/streamlit_app.py` làm entrypoint v�
 
 ## Xem các bước xử lý
 
-Sau khi bấm **Nhận diện**, mục **Các bước xử lý tín hiệu** cho thấy dạng sóng
+Sau khi bấm **Identify sample** hoặc **Identify recording**, mục **Signal processing steps** cho thấy dạng sóng
 rời rạc, tác dụng của cửa sổ Hann, phổ DFT của một khung và ảnh phổ STFT.
 Hai tab cuối trình bày cặp đỉnh dùng làm dấu vân tay và số phiếu theo độ lệch
 thời gian. Thử đổi mức nhiễu của cùng một đoạn mẫu để quan sát các bước này.
@@ -29,17 +29,16 @@ uv run --python 3.11 --with jupyterlab --with matplotlib --with pandas \
   --with-requirements prototypes/requirements.txt jupyter lab notebooks/02-tham-tu-am-nhac.ipynb
 ```
 
-## Mô hình quyết định khớp
+## DSP method and evaluation
 
-[Notebook huấn luyện và đánh giá](notebooks/04-loudio-match-training.ipynb)
-trình bày cách chia tập theo bản thu, trích đặc trưng, huấn luyện hồi quy
-logistic và so sánh trên tập kiểm tra riêng. Để chạy lại, đặt bộ dữ liệu
-Loudio cục bộ vào `data/processed/loudio-hits/`.
+The app identifies recordings using STFT, spectral peak pairs, and time-offset
+voting. A match needs at least eight votes and at least twice the runner-up
+score. The public app uses five recordings from Wikimedia Commons.
 
-Trong app, dùng **Cách quyết định khớp** để chọn quy tắc gốc hoặc mô hình
-hồi quy logistic. Hai chế độ tra cứu cùng kho năm bản thu Wikimedia Commons.
-Mô hình được đánh giá trên các đoạn Loudio 5 giây. Repo chứa tham số hồi quy
-và kết quả tổng hợp.
+The Loudio dataset is kept local and was used for the reported experiments.
+The [training and evaluation notebook](notebooks/04-loudio-match-training.ipynb)
+records the separate decision-model experiment. Re-running it requires the
+local Loudio data under `data/processed/loudio-hits/`.
 
 ## Nguồn âm thanh
 

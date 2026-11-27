@@ -45,9 +45,7 @@ def decode_audio(body):
                 timeout=8,
             )
         except FileNotFoundError as error:
-            raise ValueError(
-                "Định dạng này cần FFmpeg. Bạn có thể thử tệp WAV hoặc MP3."
-            ) from error
+            raise ValueError("This format requires FFmpeg. Try a WAV or MP3 file.") from error
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-            raise ValueError("Không đọc được âm thanh từ tệp này.") from error
+            raise ValueError("Could not read audio from this file.") from error
         return np.frombuffer(result.stdout, dtype="<f4")

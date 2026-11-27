@@ -14,11 +14,11 @@ HIGHLIGHT = "#a33d2c"
 
 
 def show_signal(wave, frame):
-    st.markdown("**DSP501 · Tín hiệu rời rạc và lấy mẫu**")
+    st.markdown("**DSP501 · Discrete-time signal and sampling**")
     st.write(
-        f"Âm thanh được đưa về một kênh ở {SR:,} mẫu/giây. "
-        "Đồ thị trên cho thấy đoạn đã xử lý. Đồ thị dưới phóng to một khung và "
-        "cho thấy cửa sổ Hann làm nhẹ biên độ ở hai đầu khung."
+        f"The app converts audio to one channel at {SR:,} samples per second. "
+        "The top plot shows the processed clip. The bottom plot zooms in on one frame "
+        "and shows how the Hann window tapers both ends."
     )
     start = frame * HOP
     raw = wave[start : start + FRAME]
@@ -29,25 +29,25 @@ def show_signal(wave, frame):
         stride = max(1, len(wave) // 4000)
         overview.plot(np.arange(0, len(wave), stride) / SR, wave[::stride], lw=0.8, color=ACCENT)
         overview.axvspan(start / SR, (start + FRAME) / SR, color=HIGHLIGHT, alpha=0.22)
-        overview.set(xlabel="Thời gian trong đoạn (s)", ylabel="Biên độ", xlim=(0, len(wave) / SR))
+        overview.set(xlabel="Time within query (s)", ylabel="Amplitude", xlim=(0, len(wave) / SR))
         ms = np.arange(FRAME) * 1000 / SR
-        zoom.plot(ms, raw, label="Mẫu trong khung", color="#64748b", lw=0.9)
-        zoom.plot(ms, tapered, label="Sau cửa sổ Hann", color=ACCENT, lw=1.2)
-        zoom.set(xlabel="Thời gian trong khung (ms)", ylabel="Biên độ")
+        zoom.plot(ms, raw, label="Before windowing", color="#64748b", lw=0.9)
+        zoom.plot(ms, tapered, label="After Hann windowing", color=ACCENT, lw=1.2)
+        zoom.set(xlabel="Time within frame (ms)", ylabel="Amplitude")
         zoom.legend(loc="upper right", fontsize=8)
         st.pyplot(fig, width="stretch")
 
 
 def show_fourier(trace, frame):
-    st.markdown("**DSP501 · DFT, FFT và STFT**")
+    st.markdown("**DSP501 · DFT, FFT, and STFT**")
     st.write(
-        f"App tính DFT của từng khung bằng FFT. Mỗi khung có {FRAME} mẫu "
-        f"({1000 * FRAME / SR:.1f} ms), dịch {HOP} mẫu ({1000 * HOP / SR:.0f} ms) "
-        f"mỗi lần. Khoảng cách giữa hai ô tần số là {SR / FRAME:.2f} Hz. "
-        "Xếp các phổ theo thứ tự thời gian sẽ thu được phổ thời gian–tần số."
+        f"An FFT computes the DFT of each {FRAME}-sample frame "
+        f"({1000 * FRAME / SR:.1f} ms). Frames advance by {HOP} samples "
+        f"({1000 * HOP / SR:.0f} ms). Frequency bins are {SR / FRAME:.2f} Hz apart. "
+        "The spectrogram shows how the spectrum changes over time."
     )
     st.latex(r"X_m[k] = \sum_{n=0}^{N-1} x[mH+n]\,w[n]\,e^{-j2\pi kn/N}")
-    st.caption("N là số mẫu trong một khung, H là bước dịch và w[n] là cửa sổ Hann.")
+    st.caption("N is the frame length in samples, H is the hop size, and w[n] is the Hann window.")
     times, hz, magnitude = (trace[name] for name in ("times", "frequencies", "magnitude"))
     visible = hz <= 3500
     maximum = float(magnitude.max()) or 1.0
@@ -57,9 +57,9 @@ def show_fourier(trace, frame):
         single, spectrogram = fig.subplots(2)
         single.plot(hz[visible], db[:, frame], color=ACCENT, lw=1)
         single.set(
-            title=f"Phổ của một khung tại {times[frame]:.3f} s",
-            xlabel="Tần số (Hz)",
-            ylabel="Mức (dB)",
+            title=f"Spectrum of the frame at {times[frame]:.3f} s",
+            xlabel="Frequency (Hz)",
+            ylabel="Level (dB)",
             ylim=(-80, 3),
         )
         mesh = spectrogram.pcolormesh(
@@ -81,30 +81,32 @@ def show_fourier(trace, frame):
             spectrogram.plot(
                 times[[start, stop]], hz[[f1, f2]], color="white", marker="o", ms=4, lw=1.2
             )
-        spectrogram.set(xlabel="Thời gian (s)", ylabel="Tần số (Hz)", ylim=(0, 3500))
-        fig.colorbar(mesh, ax=spectrogram, label="dB tương đối")
+        spectrogram.set(xlabel="Time (s)", ylabel="Frequency (Hz)", ylim=(0, 3500))
+        fig.colorbar(mesh, ax=spectrogram, label="Relative level (dB)")
         st.pyplot(fig, width="stretch")
-    st.caption("Vòng tròn đánh dấu đỉnh phổ được giữ. Đường trắng nối cặp đỉnh đầu tiên nếu có.")
+    st.caption(
+        "Circles mark selected peaks. The white line joins the first peak pair when one is available."
+    )
 
 
 def show_pairs(trace, tokens):
-    st.markdown("**Dấu vân tay · Ghép đỉnh phổ**")
+    st.markdown("**Fingerprinting by spectral peak pairing**")
     st.write(
-        f"App giữ **{len(trace['peaks']):,} đỉnh** trong dải 120–3500 Hz và tạo "
-        f"**{tokens:,} cặp**. Mỗi khóa mã hóa ô tần số của hai đỉnh và khoảng thời gian "
-        "giữa chúng. Các cặp dưới đây lấy trực tiếp từ đoạn vừa phân tích."
+        f"The app selected **{len(trace['peaks']):,} peaks** between 120 and 3,500 Hz and formed "
+        f"**{tokens:,} pairs**. Each key encodes two frequency bins and the time between them. "
+        "The table shows pairs from this query."
     )
     if not trace["pairs"]:
-        st.info("Đoạn này không tạo được cặp đỉnh phù hợp.")
+        st.info("This clip produced no usable peak pairs.")
         return
     hz = trace["frequencies"]
     st.table(
         [
             {
-                "Đỉnh 1 (Hz)": round(hz[f1], 1),
-                "Đỉnh 2 (Hz)": round(hz[f2], 1),
-                "Cách nhau (ms)": round((stop - start) * HOP * 1000 / SR),
-                "Khóa": str(token),
+                "Peak 1 (Hz)": round(hz[f1], 1),
+                "Peak 2 (Hz)": round(hz[f2], 1),
+                "Separation (ms)": round((stop - start) * HOP * 1000 / SR),
+                "Key": str(token),
             }
             for token, (start, f1), (stop, f2) in trace["pairs"]
         ]
@@ -112,14 +114,14 @@ def show_pairs(trace, tokens):
 
 
 def show_offsets(trace, leading):
-    st.markdown("**Đối sánh theo độ lệch thời gian**")
+    st.markdown("**Matching by time-offset voting**")
     st.write(
-        "Mỗi cặp trùng khóa bỏ một phiếu cho độ lệch giữa vị trí trong bản thu và "
-        "vị trí trong đoạn nghe. Cụm phiếu dày quanh cùng một độ lệch là dấu hiệu "
-        "đoạn nghe đến từ bản thu đó."
+        "Each matching key votes for its reference time minus its query time. "
+        "Votes that cluster around one offset support the same "
+        "recording and start time."
     )
     if not trace["offsets"]:
-        st.info("Không có phiếu khớp để vẽ.")
+        st.info("No matching votes to plot.")
         return
     shifts = np.array(sorted(trace["offsets"]))
     votes = [trace["offsets"][shift] for shift in shifts]
@@ -128,23 +130,25 @@ def show_offsets(trace, leading):
         fig = Figure(figsize=(8.2, 3), layout="constrained")
         ax = fig.subplots()
         ax.vlines(shifts * HOP / SR, 0, votes, color=ACCENT, lw=1)
-        ax.axvline(center, color=HIGHLIGHT, linestyle="--", label=f"Độ lệch nổi bật ({center:g} s)")
+        ax.axvline(center, color=HIGHLIGHT, linestyle="--", label=f"Winning offset ({center:g} s)")
         ax.set(
             title=leading["title"],
-            xlabel="Độ lệch (s)",
-            ylabel="Phiếu ở mỗi độ lệch",
+            xlabel="Time offset (s)",
+            ylabel="Votes per offset bin",
             ylim=(0, None),
         )
         ax.legend(loc="upper right", fontsize=8)
         st.pyplot(fig, width="stretch")
-    st.caption("Điểm trong bảng cộng phiếu tại vạch đỏ và ở hai độ lệch lân cận (±20 ms).")
+    st.caption(
+        "The table score sums the votes at the red line and its two neighboring bins (±20 ms)."
+    )
 
 
 def show_dsp_steps(wave, result):
     trace = result["trace"]
     frame = int(np.unravel_index(trace["magnitude"].argmax(), trace["magnitude"].shape)[1])
-    st.subheader("Các bước xử lý tín hiệu")
-    signal, fourier, pairs, offsets = st.tabs(["Tín hiệu", "DFT / STFT", "Dấu vân tay", "Đối sánh"])
+    st.subheader("Signal processing steps")
+    signal, fourier, pairs, offsets = st.tabs(["Signal", "DFT / STFT", "Fingerprint", "Matching"])
     with signal:
         show_signal(wave, frame)
     with fourier:
