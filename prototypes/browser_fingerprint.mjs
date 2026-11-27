@@ -256,6 +256,8 @@ function drawDspSteps(root, wave, { spectrum, peaks, firstPair, pairCount }) {
 }
 
 export default function ({ parentElement: root, setTriggerValue }) {
+  const source = root.querySelector(".audio-source");
+  const uploadPanel = root.querySelector(".upload-panel");
   const upload = root.querySelector(".audio-file");
   const drop = root.querySelector(".drop-zone");
   const record = root.querySelector(".record-button");
@@ -277,7 +279,20 @@ export default function ({ parentElement: root, setTriggerValue }) {
   duration.onchange = () => showTime(Number(duration.value));
   duration.onchange();
 
+  function showSource() {
+    const recording = source.value === "record";
+    uploadPanel.hidden = recording;
+    card.hidden = !recording;
+  }
+
+  source.onchange = () => {
+    showSource();
+    status.textContent = "";
+  };
+  showSource();
+
   function busy(value) {
+    source.disabled = value;
     upload.disabled = value;
     drop.disabled = value;
     record.disabled = value;

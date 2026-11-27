@@ -66,6 +66,7 @@ def show_app():
 
 
 def show_match(index, query):
+    st.subheader("Identification result")
     try:
         payload = json.dumps(query, separators=(",", ":")).encode()
         seconds, result = index.recognize(payload)
@@ -73,20 +74,22 @@ def show_match(index, query):
         st.error(str(error))
         return
 
-    match_column, votes_column = st.columns([5, 7])
-    with match_column:
-        match = result["match"]
-        if match:
-            start = max(0, match["seconds"])
-            st.success(match["title"])
-            st.caption(f"Estimated start in reference {start:g} s")
-        else:
-            st.info("No reliable match in the catalog.")
-        st.caption(f"Analyzed {seconds:.2f} s · {result['tokens']:,} spectral peak pairs")
-    with votes_column, st.expander("See time-offset votes"):
+    match = result["match"]
+    if match:
+        start = max(0, match["seconds"])
+        st.success(match["title"])
+        st.caption(f"Estimated start in reference {start:g} s")
+    else:
+        st.info("No reliable match in the catalog.")
+    st.caption(f"Analyzed {seconds:.2f} s · {result['tokens']:,} spectral peak pairs")
+    leading, runner_up = result["candidates"][:2]
+    with st.expander("See time-offset votes"):
         from dsp_steps import show_offsets
 
-        leading = result["candidates"][0]
+        st.caption(
+            f"Leading score {leading['votes']:,} · runner-up {runner_up['votes']:,} votes. "
+            "A match needs at least 8 votes and twice the runner-up score."
+        )
         _, pairs = load_query(payload)
         offsets = Counter(
             reference_frame - query_frame
