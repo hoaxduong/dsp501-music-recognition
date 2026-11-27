@@ -1,55 +1,56 @@
 # Music Recording Identification
 
-Identify snippets by matching spectral peak pairs and voting on time offsets.
+A DSP501 project that matches short excerpts to indexed recordings using
+spectral peak pairs and time-offset voting.
 
-[Open the Streamlit demo](https://music-recognition.streamlit.app/).
+- [Open the Streamlit app](https://music-recognition.streamlit.app/)
+- [Read or run the experiment notebook](notebooks/music-recording-identification.ipynb)
+- [Inspect the aggregate holdout counts](results/holdout_metrics.csv)
 
-```bash
-uv run --python 3.11 --with-requirements prototypes/requirements.txt streamlit run prototypes/streamlit_app.py
-```
+## Run locally
 
-Streamlit Community Cloud uses `prototypes/streamlit_app.py` as the entry point.
-
-## Identify a recording
-
-Choose **Upload audio** or **Record audio**. Matching starts automatically after
-the clip is ready. The browser analyzes up to 15 seconds of an uploaded clip
-or records 5, 10, or 15 seconds from the microphone. Audio stays in the
-browser. Only the peak-pair fingerprints go to the Streamlit matcher.
-
-The default Loudio index covers the first 45 seconds of 100 recordings. It
-contains peak-pair digests, frame offsets, and display names. The Loudio
-reference audio and dataset manifests stay on the local machine.
-
-## Notebook thí nghiệm
-
-[Nhận diện bản thu âm nhạc từ đoạn âm thanh ngắn](notebooks/02-tham-tu-am-nhac.ipynb)
-so sánh cosine, 3-NN, DTW và dấu vân tay phổ ở ba mức nhiễu. Notebook có sẵn
-bảng kết quả và biểu đồ. Chạy JupyterLab từ thư mục repo để thử lại với năm
-bản thu đi kèm.
+Use Python 3.11 for the app and notebook environment.
 
 ```bash
-uv run --python 3.11 --with jupyterlab --with matplotlib --with pandas \
-  --with-requirements prototypes/requirements.txt jupyter lab notebooks/02-tham-tu-am-nhac.ipynb
+uv run --python 3.11 --with-requirements prototypes/requirements.txt \
+  streamlit run prototypes/streamlit_app.py
 ```
 
-## DSP method and evaluation
+Choose **Upload audio** or **Record audio** under **Audio input**. Uploads use
+up to 15 seconds. Microphone recordings can run for 5, 10, or 15 seconds.
+The browser processes the audio and displays the DSP steps. The server
+receives spectral peak-pair fingerprints for matching. An accepted result
+shows the recording and its estimated start time.
 
-The app identifies recordings using STFT, spectral peak pairs, and time-offset
-voting. A match needs at least eight votes and at least twice the runner-up
-score.
+## Reproduce the study
 
-The Loudio dataset is kept local and was used for the reported experiments.
-The [training and evaluation notebook](notebooks/04-loudio-match-training.ipynb)
-records the separate decision-model experiment. Re-running it requires the
-local Loudio data under `data/processed/loudio-hits/`.
+```bash
+uv run --python 3.11 --with-requirements prototypes/requirements.txt \
+  --with jupyterlab --with pandas jupyter lab notebooks/music-recording-identification.ipynb
+```
 
-## Notebook recording sources
+The notebook runs its signal-processing example and results from the included
+aggregate counts. To repeat the full 180-query evaluation, set
+`DSP501_DATASET` to the original processed corpus directory containing
+`tracks.csv`, `queries.csv`, `references/`, and `queries/`. The default is
+`data/processed/loudio-hits/` inside the checkout.
 
-The five Wikimedia Commons recordings below are used by the introductory notebook.
+The demo index contains 100 recordings and covers their first 45 seconds.
+The open-set experiment indexes 90 recordings and uses five-second test
+excerpts. It identified 120 of 135 indexed queries and rejected all 45
+withheld queries. The five withheld recordings and simulated noise define
+the scope of those results.
 
-- Für Elise · V Gao (Gaodifan) · CC0. [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:FurElise.ogg)
-- Jingle Bells · Kevin MacLeod (incompetech.com) · [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Jingle_Bells.ogg)
-- Maple Leaf Rag · United States Marine Band. [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:1906_-_Scott_Joplin%27s_Maple_Leaf_Rag_%281899%29_played_by_the_United_States_Marine_Band.ogg)
-- In the Hall of the Mountain King · Czech National Symphony Orchestra · Musopen. [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Musopen_-_In_the_Hall_Of_The_Mountain_King.ogg)
-- Giao hưởng số 5 · Skidmore College Orchestra · Musopen. [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ludwig_van_Beethoven_-_symphony_no._5_in_c_minor%2C_op._67_-_i._allegro_con_brio.ogg)
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| [Notebook](notebooks/music-recording-identification.ipynb) | DSP method, experiment, results, and local replay |
+| [Results](results/holdout_metrics.csv) | Fixed-rule counts by noise condition |
+| [App entry point](prototypes/streamlit_app.py) | Streamlit UI and server-side matching |
+| [Browser DSP](prototypes/browser_fingerprint.mjs) | Local audio decoding, fingerprints, and signal plots |
+| [Reference index](prototypes/fingerprint_assets/loudio-index.npz) | Peak-pair digests, frame offsets, and display titles |
+
+Streamlit Community Cloud uses `prototypes/streamlit_app.py` as the entry
+point. The source audio, manifests, and generated query clips stay in the
+local dataset directory.

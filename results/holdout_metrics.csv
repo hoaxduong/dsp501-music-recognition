@@ -1,0 +1,4 @@
+condition,known_n,known_correct,known_wrong,known_rejected,unknown_n,unknown_false_accept,unknown_rejected,known_top1_before_threshold
+clean,45,45,0,0,15,0,15,45
+snr10,45,44,0,1,15,0,15,44
+snr-3,45,31,0,14,15,0,15,43
